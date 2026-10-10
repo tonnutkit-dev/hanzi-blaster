@@ -1,0 +1,58 @@
+name: Deploy HANZI BLASTER V18
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout uploaded website packages
+        uses: actions/checkout@v4
+
+      - name: Verify uploaded packages and assemble website
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > SHA256SUMS <<'CHECKSUMS'
+          750796cbf44650ec997cc8b1d7b27a56b301d81255a91d46391b04741ee822b5  HB-V18-01.zip
+          a0ffe6d878334e33bd47f0b438422c7f3121dfd52b127f47513a2e117d0ddd10  HB-V18-02.zip
+          23d7506a82329ec2abb65bd157469d9ca0cf958399912faf67b8edc78625d6bc  HB-V18-03.zip
+          b4197be0098843a41b3ff1358cf8554df9f090c638911aebc41554a706d37500  HB-V18-04.zip
+          CHECKSUMS
+          sha256sum -c SHA256SUMS
+          mkdir -p site
+          for n in 01 02 03 04; do
+            unzip -oq "HB-V18-${n}.zip" -d site
+          done
+          test -f site/index.html
+          test -f site/ufo-meteor/index.html
+          test -f site/.nojekyll
+          test "$(find site -type f | wc -l | tr -d ' ')" = "1622"
+          echo "HANZI BLASTER V18: 1,622 verified website files ready"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
