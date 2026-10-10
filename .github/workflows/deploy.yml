@@ -1,4 +1,5 @@
 name: Deploy HANZI BLASTER V18
+# Re-trigger after GitHub Pages Actions source enabled
 
 on:
   push:
